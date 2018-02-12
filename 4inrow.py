@@ -54,12 +54,14 @@ def iswon(G,l,c):
 
 # implementation of the IA
 def IA(G,p):
-    c = preventLosing(G,p)
+    c = WiningPlay(G,p) # win if winable
     if c==-1:
-        c = random.randint(0,6)
+        c=WiningPlay(G,next(p)) # prevent lose if loseable
+    if c==-1:
+        c = random.randint(0,6) # choose randomly
     return c
 
-def preventLosing(G,p):
+def WiningPlay(G,p):
     gameOver=False
     i=0
     while (i<7 and not(gameOver)):
