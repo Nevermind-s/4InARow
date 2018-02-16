@@ -59,54 +59,57 @@ def iswon(G,l,c):
 # implementation of the IA
 def IA(G,p):
     c = winingPlay(G,p) # win if winable
-    if c==-1:
+    if c==[]:
         c=winingPlay(G,next(p)) # prevent lose if loseable
-    if c==-1:
+    if c==[]:
         l = possibilities(G,p)
         i = random.randint(0,len(l)-1) # choose randomly
         return l[i]
     else:
-        return c
+        return c[0]
 
 def winingPlay(G,p): # search one-turn winning play
     gameOver=False
+    l=[]
     i=0
-    while (i<7 and not(gameOver)):
+    while (i<7):
         G1=copy.copy(G)
         G1,p1,gameOver = play(G1,p,i)
         if gameOver:
-            print("YEAH!")
-            return i
-        else:
-            i+=1
-    return -1
-
-def losingPlay(G,p,i): # search losing plays
+            l.append(i)
+        i+=1
+    return l
+def losingPlay(G,p0,i): # search losing plays
     G1=copy.copy(G)
-    G1,p1,gameOver = play(G1,p,i)
-    G1,p1,gameOver = play(G1,p1,i)
+    G1,p1,gameOver = play(G1,p0,i)
+    G2=copy.copy(G1)
+    G2,p2,gameOver = play(G2,p1,i)
     if gameOver:
         return -1
     else:
+        for j in range(1,6):
+            G3=copy.copy(G1)
+            G3,p3,gameOver=play(G3,p1,j)
+            if len(winingPlay(G3,p1))>1:
+                return -1
         return 0
-
 def possibilities(G,p): # give all tactical play
     l=freeCol(G)
     i=0
     while i<len(l):
         if losingPlay(G,p,l[i])==-1:
-            print(i)
             l.remove(l[i])
         else:
             i+=1
+    print(l)
     return l
+
 def freeCol(G):
     l=[]
     for i in range(7):
         if G[0][i]==0:
             l.append(i)
     return l
-
 
 # TEST
 
