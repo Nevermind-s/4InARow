@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import copy
+import matplotlib.pyplot as plt
+
 # init game
 def newGame():
     w, h = 7, 6
@@ -8,8 +10,9 @@ def newGame():
     return matrix,False
 # print game status
 def printGame(G,p):
-    for L in G:
-        print(L)
+    print(G)
+    plt.matshow(G)
+    plt.show()
 # adapt the position of the coin after insersion in one column
 def play(G,p,c):
     i=5
@@ -45,36 +48,69 @@ def iswon(G,l,c):
                 if arr[i+1]==arr[i] & arr[i]!=0:
                     w+=1
                     if w>2:
-                        print(">>>GAMEOVER!<<<")
                         return True
                 else:
                     w=0
     return False
 
 
+#test
+
 # implementation of the IA
 def IA(G,p):
-    c = WiningPlay(G,p) # win if winable
+    c = winingPlay(G,p) # win if winable
     if c==-1:
-        c=WiningPlay(G,next(p)) # prevent lose if loseable
+        c=winingPlay(G,next(p)) # prevent lose if loseable
     if c==-1:
-        c = random.randint(0,6) # choose randomly
-    return c
+        l = possibilities(G,p)
+        i = random.randint(0,len(l)-1) # choose randomly
+        return l[i]
+    else:
+        return c
 
-def WiningPlay(G,p):
+def winingPlay(G,p): # search one-turn winning play
     gameOver=False
     i=0
     while (i<7 and not(gameOver)):
         G1=copy.copy(G)
         G1,p1,gameOver = play(G1,p,i)
         if gameOver:
+            print("YEAH!")
             return i
         else:
             i+=1
     return -1
 
+def losingPlay(G,p,i): # search losing plays
+    G1=copy.copy(G)
+    G1,p1,gameOver = play(G1,p,i)
+    G1,p1,gameOver = play(G1,p1,i)
+    if gameOver:
+        return -1
+    else:
+        return 0
+
+def possibilities(G,p): # give all tactical play
+    l=freeCol(G)
+    i=0
+    while i<len(l):
+        if losingPlay(G,p,l[i])==-1:
+            print(i)
+            l.remove(l[i])
+        else:
+            i+=1
+    return l
+def freeCol(G):
+    l=[]
+    for i in range(7):
+        if G[0][i]==0:
+            l.append(i)
+    return l
 
 
+# TEST
+
+# MAIN
 G,gameOver = newGame()
 p = 1
 printGame(G,p)
@@ -83,7 +119,6 @@ while (gameOver != True):
         try:
             c = input("Inserer le numero de colonne : ")
             G, p,gameOver = play(G, p, int(c))
-            printGame(G,p)
         except:
             pass
     else:
