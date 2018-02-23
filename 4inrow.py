@@ -63,10 +63,31 @@ def IA(G,p):
         c=winingPlay(G,next(p)) # prevent lose if loseable
     if c==[]:
         l = possibilities(G,p)
-        i = random.randint(0,len(l)-1) # choose randomly
-        return l[i]
+        if len(l)==0:
+            l0 = freeCol(G)
+            return l0[0]
+        else:
+            l2=possibilities(G,next(p))
+            a=list(set(l).intersection(l2))
+            if len(a)!=0:
+                L= min(a, key=lambda x:abs(x-3))
+                return L
+            else:
+                return min(l, key=lambda x:abs(x-3))
+
+            #i = random.randint(0,len(a)-1) # choose randomly
+            #return l[i]
     else:
         return c[0]
+
+def getposition(G,a):
+    L=[]
+    for elem in a:
+        for i in range(5):
+            if G[5-i][elem]!=0:
+                L.append(5-i)
+    return L
+
 
 def winingPlay(G,p): # search one-turn winning play
     gameOver=False
@@ -79,6 +100,7 @@ def winingPlay(G,p): # search one-turn winning play
             l.append(i)
         i+=1
     return l
+
 def losingPlay(G,p0,i): # search losing plays
     G1=copy.copy(G)
     G1,p1,gameOver = play(G1,p0,i)
@@ -92,7 +114,12 @@ def losingPlay(G,p0,i): # search losing plays
             G3,p3,gameOver=play(G3,p1,j)
             if len(winingPlay(G3,p1))>1:
                 return -1
+            elif len(winingPlay(G3,p1))==1:
+                G3,p3,gameOver=play(G3,p3,winingPlay(G3,p1)[0])
+                if len(winingPlay(G3,p1))>0:
+                    return -1
         return 0
+
 def possibilities(G,p): # give all tactical play
     l=freeCol(G)
     i=0
@@ -101,7 +128,6 @@ def possibilities(G,p): # give all tactical play
             l.remove(l[i])
         else:
             i+=1
-    print(l)
     return l
 
 def freeCol(G):
