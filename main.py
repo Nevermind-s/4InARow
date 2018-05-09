@@ -31,9 +31,20 @@ OPERAND = {
     'mv':        9,
     'elev1':	10,
     'elev2':	11,
-    'elev3':    12
+    'elev3':    12,
+    'putin':    13
 }
 
+# Hardcoded position of columns
+COLS = {
+    0: (0, -125, 200, 20),
+    1: (0,  -95, 230, 20),
+    2: (0,  -60, 230, 20),
+    3: (0,  -30, 220, 20),
+    4: (0,    0, 220, 20),
+    5: (0,   30, 230, 20),
+    6: (0,   60, 240, 20)
+}
 
 def uarm_init():
     ctx = {'uarm': None,
@@ -78,7 +89,10 @@ def loop(ctx):
         
 def getDiff(g, gold):
     x = np.subtract(g, gold)
-    return np.where( x > 0)[0][0], np.where( x > 0)[1][0]
+    try:
+        return np.where( x > 0)[0][0], np.where( x > 0)[1][0]
+    except:
+        return 0, 0
 
 
 def moveto(ctx, query):
@@ -105,9 +119,23 @@ def moveto(ctx, query):
     angle = translation(int(query[1]), int(query[2]), int(query[3]))
     msg = encode_command(OPERAND['base_rot'], angle[0])
     ctx['uarm'].publish(msg)
+    msg = encode_command(OPERAND['upper_arm'], angle[2])
+    ctx['uarm'].publish(msg)
+    time.sleep(1)
     msg = encode_command(OPERAND['lower_arm'], angle[1])
     ctx['uarm'].publish(msg)
-    msg = encode_command(OPERAND['upper_arm'], angle[2])
+
+
+def putin(ctx, col):
+    moveto(ctx, COLS[col])
+    time.sleep(1)
+    msg = encode_command(OPERAND['pump_off'], 0)
+    ctx['uarm'].publish(msg)
+    time.sleep(1)
+    msg = encode_command(OPERAND['lower_arm'], 45)
+    ctx['uarm'].publish(msg)
+    time.sleep(1)
+    msg = encode_command(OPERAND['reset'], 0)
     ctx['uarm'].publish(msg)
 
 
@@ -136,6 +164,8 @@ def execute(ctx, msg):
         # special case for elevator commands
         msg = encode_command(OPERAND[query[0]]-9, int(query[1]))
         ctx['elev'].publish(msg)
+    elif OPERAND[query[0]] == 13:
+        putin(ctx, int(query[1]))
     else:
         # every others operations are directly implemented on the arm
         msg = encode_command(OPERAND[query[0]], int(query[1]))
@@ -146,14 +176,24 @@ def execute(ctx, msg):
 if __name__ == '__main__':
     try:
         Gold = np.arange(42).reshape(6,7)*0
-        #ctx = uarm_init()
+        ctx = uarm_init()
         while True and not rospy.is_shutdown():
+            msg = encode_command(OPERAND['pump_on'], 1)
+            ctx['uarm'].publish(msg)
+            time.sleep(3)
             G = imageCapture.captureFrame()
             l, c = getDiff(G, Gold)
+            if gamingAI.iswon(G, l, c):
+                msg = encode_command(OPERAND['reset'], 0)
+                ctx['uarm'].publish(msg)
+                msg = encode_command(OPERAND['upper_arm'], 90)
+                ctx['uarm'].publish(msg)
+                break
             Gold = G
-            print(gamingAI.IA(G,1))
-            print(gamingAI.iswon(G, l, c))
+            putin(ctx, gamingAI.IA(G, 1))
             time.sleep(15)
+            #print(">>> ", end='')
+            #stdin = raw_input()
             #execute(ctx, stdin)
     except rospy.ROSInterruptException:
         print("Shutdown signal received.")
