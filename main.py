@@ -177,20 +177,22 @@ if __name__ == '__main__':
     try:
         Gold = np.arange(42).reshape(6,7)*0
         ctx = uarm_init()
+        time.sleep(10)
         while True and not rospy.is_shutdown():
             msg = encode_command(OPERAND['pump_on'], 1)
             ctx['uarm'].publish(msg)
             time.sleep(3)
             G = imageCapture.captureFrame()
             l, c = getDiff(G, Gold)
+            print(l, c)
             if gamingAI.iswon(G, l, c):
                 msg = encode_command(OPERAND['reset'], 0)
                 ctx['uarm'].publish(msg)
                 msg = encode_command(OPERAND['upper_arm'], 90)
                 ctx['uarm'].publish(msg)
                 break
-            Gold = G
             putin(ctx, gamingAI.IA(G, 1))
+            Gold = G
             time.sleep(15)
             #print(">>> ", end='')
             #stdin = raw_input()
