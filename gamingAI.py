@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import numpy as np
 import random
 import copy
@@ -11,8 +12,8 @@ def newGame():
 # print game status
 def printGame(G,p):
     print(G)
-    plt.matshow(G)
-    plt.show()
+    #plt.matshow(G)
+    #plt.show()
 # adapt the position of the coin after insersion in one column
 def play(G,p,c):
     i=5
@@ -27,9 +28,9 @@ def play(G,p,c):
     return G, p, False
 # determine next guy who has to play
 def next(p):
-    if (p==1):
-        return 2
-    return 1
+    if (p==2):
+        return 1
+    return 2
 # return vertical, horizontal and both diagonals of one position
 def neighbours(G,l,c):
     h = G[l]
@@ -37,7 +38,7 @@ def neighbours(G,l,c):
     for i in range(6):
         v.append(G[i][c])
     d1=np.diag(G,c-l)
-    d2=np.diag(np.flip(G,1),(6-c)-l)
+    d2=np.diag(np.fliplr(G),(6-c)-l)
     return h,v,d1,d2
 # determine if the game is won or not
 def iswon(G,l,c):
@@ -52,10 +53,6 @@ def iswon(G,l,c):
                 else:
                     w=0
     return False
-
-
-#test
-
 # implementation of the IA
 def IA(G,p):
     c = winingPlay(G,p) # win if winable
@@ -136,22 +133,3 @@ def freeCol(G):
         if G[0][i]==0:
             l.append(i)
     return l
-
-# TEST
-
-# MAIN
-G,gameOver = newGame()
-p = 1
-printGame(G,p)
-while (gameOver != True):
-    if p==1:
-        try:
-            c = input("Inserer le numero de colonne : ")
-            G, p,gameOver = play(G, p, int(c))
-        except:
-            pass
-    else:
-        print("IA's turn")
-        c = IA(G, p)
-        G, p,gameOver = play(G, p,c)
-        printGame(G,p)

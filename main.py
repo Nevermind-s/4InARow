@@ -10,6 +10,9 @@ from builtins import (bytes, dict, int, list, object, range, str, ascii, chr,
                       map, zip)
 from math import (sqrt, acos, atan, degrees, hypot, pi)
 import time
+import gamingAI
+import imageCapture
+import numpy as np
 
 # pylint: disable=E0401
 from std_msgs.msg import UInt16
@@ -71,6 +74,11 @@ def loop(ctx):
         rospy.loginfo(msg)
         ctx['uarm'].publish(msg)
         ctx['rate'].sleep()
+        
+        
+def getDiff(g, gold):
+    x = np.subtract(g, gold)
+    return np.where( x > 0)[0][0], np.where( x > 0)[1][0]
 
 
 def moveto(ctx, query):
@@ -137,11 +145,16 @@ def execute(ctx, msg):
 
 if __name__ == '__main__':
     try:
-        ctx = uarm_init()
+        Gold = np.arange(42).reshape(6,7)*0
+        #ctx = uarm_init()
         while True and not rospy.is_shutdown():
-            print(">>> ", end='')
-            stdin = raw_input()
-            execute(ctx, stdin)
+            G = imageCapture.captureFrame()
+            l, c = getDiff(G, Gold)
+            Gold = G
+            print(gamingAI.IA(G,1))
+            print(gamingAI.iswon(G, l, c))
+            time.sleep(15)
+            #execute(ctx, stdin)
     except rospy.ROSInterruptException:
         print("Shutdown signal received.")
     except (KeyboardInterrupt, EOFError) as err:

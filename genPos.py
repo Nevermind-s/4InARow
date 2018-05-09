@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,14 +25,15 @@ class gameScheme:
         self.stateOfGame = []
         #self.printd()
         self.getRGB()
-        print(np.reshape(self.stateOfGame, (6,7)))
+        #print(np.reshape(self.stateOfGame, (6,7)))
         
     
     
     def getRGB(self):
        for i,j in enumerate(self.pos):
             color = self.img[j[1], j[0]]
-            if color[2] > 170 and color[1] < 150 :
+            
+            if color[2] > 179 and color[1] < 150 :
                 print (i+1, " RED", color)
                 self.stateOfGame.append(1)
             elif color[1] > 140 and color[2] > 140:
@@ -40,9 +42,12 @@ class gameScheme:
             else:
                 print(i+1, " EMPTY", color)
                 self.stateOfGame.append(0)
-        
   
-
+    
+    def getState(self): 
+        return np.reshape(self.stateOfGame, (6,7))
+        
+        
     def printd(self):
         im=plt.imread('img/game1.png')
         implot=plt.imshow(im)
