@@ -46,9 +46,10 @@ COLS = {
     6: (0,   60, 240, 20)
 }
 
+
 def uarm_init():
     ctx = {'uarm': None,
-		   'elev': None,
+           'elev': None,
            'rate': None}
     rospy.init_node('raspi_commander', anonymous=True)
     ctx['uarm'] = rospy.Publisher('movements', UInt16, queue_size=10)
@@ -85,12 +86,12 @@ def loop(ctx):
         rospy.loginfo(msg)
         ctx['uarm'].publish(msg)
         ctx['rate'].sleep()
-        
-        
+
+
 def getDiff(g, gold):
     x = np.subtract(g, gold)
     try:
-        return np.where( x > 0)[0][0], np.where( x > 0)[1][0]
+        return np.where(x > 0)[0][0], np.where(x > 0)[1][0]
     except:
         return 0, 0
 
@@ -156,10 +157,10 @@ def execute(ctx, msg):
         msg = encode_command(OPERAND['lower_arm'], 45)
         ctx['uarm'].publish(msg)
         time.sleep(1)
-        
+
     if OPERAND[query[0]] == 9:
         # special case for moveto which is not implemented on the arm
-        moveto(ctx, query)     
+        moveto(ctx, query)
     elif 10 <= OPERAND[query[0]] <= 12:
         # special case for elevator commands
         msg = encode_command(OPERAND[query[0]]-9, int(query[1]))
@@ -175,7 +176,7 @@ def execute(ctx, msg):
 
 if __name__ == '__main__':
     try:
-        Gold = np.arange(42).reshape(6,7)*0
+        Gold = np.arange(42).reshape(6, 7)*0
         ctx = uarm_init()
         time.sleep(10)
         while True and not rospy.is_shutdown():
@@ -194,9 +195,9 @@ if __name__ == '__main__':
             putin(ctx, gamingAI.IA(G, 1))
             Gold = G
             time.sleep(15)
-            #print(">>> ", end='')
-            #stdin = raw_input()
-            #execute(ctx, stdin)
+            # print(">>> ", end='')
+            # stdin = raw_input()
+            # execute(ctx, stdin)
     except rospy.ROSInterruptException:
         print("Shutdown signal received.")
     except (KeyboardInterrupt, EOFError) as err:
