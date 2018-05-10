@@ -12,6 +12,7 @@ from math import (sqrt, acos, atan, degrees, hypot, pi)
 import gamingAI
 import imageCapture
 import numpy as np
+import sys
 
 # pylint: disable=E0401
 from std_msgs.msg import UInt16
@@ -181,22 +182,24 @@ if __name__ == '__main__':
         Gold = np.zeros(6, 7)
         ctx = uarm_init()
         rospy.sleep(10.)
-        while True and not rospy.is_shutdown():
-            msg = encode_command(OPERAND['pump_on'], 1)
-            ctx['uarm'].publish(msg)
+        while not rospy.is_shutdown():
+            # init game sequence by activating the pump
+            execute(ctx, 'pump_on')
             rospy.sleep(3.)
+            # compare current board with last state
             Gcur = imageCapture.captureFrame()
             l, c = getDiff(Gcur, Gold)
             print(l, c)
+            # if the game is over, let's do a little jiggling before leaving
             if gamingAI.iswon(Gcur, l, c):
-                msg = encode_command(OPERAND['reset'], 0)
-                ctx['uarm'].publish(msg)
-                msg = encode_command(OPERAND['upper_arm'], 90)
-                ctx['uarm'].publish(msg)
-                break
+                execute(ctx, 'reset')
+                execute(ctx, 'upper_arm 90')
+                rospy.sleep(5.)
+                sys.exit(0)
+            # play the best move
             putin(ctx, gamingAI.IA(Gcur, 1))
             Gold = Gcur
-            rospy.sleep(15.)
+            rospy.sleep(10.)
             # print(">>> ", end='')
             # stdin = raw_input()
             # execute(ctx, stdin)
