@@ -87,14 +87,6 @@ def loop(ctx):
         ctx['rate'].sleep()
 
 
-def getDiff(g, gold):
-    x = np.subtract(g, gold)
-    try:
-        return np.where(x > 0)[0][0], np.where(x > 0)[1][0]
-    except:
-        return 0, 0
-
-
 def moveto(ctx, query):
     """
     Move the head of the arm to the desired position.
@@ -171,6 +163,17 @@ def execute(ctx, msg):
         msg = encode_command(OPERAND[query[0]], int(query[1]))
         ctx['uarm'].publish(msg)
     ctx['rate'].sleep()
+
+
+def getDiff(g, gold):
+    """
+    Ask Salim to know what this function is about.
+    """
+    x = np.subtract(g, gold)
+    try:
+        return np.where(x > 0)[0][0], np.where(x > 0)[1][0]
+    except:
+        return 0, 0
 
 
 if __name__ == '__main__':
