@@ -60,7 +60,7 @@ class gameScheme:
         for i, j in enumerate(self.pos):
             color = self.img[j[1], j[0]]
 
-            if (0 <= color[0] < 30 or 355 < color[0] <= 359) and \
+            if (0 <= color[0] < 20 or 340 < color[0] <= 359) and \
                     color[2] >= 127 and color[3] >= 127:
                 print (i+1, " RED", color)
                 self.stateOfGame.append(1)
