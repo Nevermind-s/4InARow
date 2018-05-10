@@ -148,7 +148,7 @@ def execute(ctx, msg):
     if query[0] == 'reset':
         # move the arm upward prior to reset to avoid hitting the game
         execute(ctx, 'lower_arm 45')
-        rospy.sleep(1)
+        rospy.sleep(1.)
     if query[0] == 'mv':
         # special case for moveto which is not implemented on the arm
         moveto(ctx, query)
