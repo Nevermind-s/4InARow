@@ -9,8 +9,8 @@ from builtins import (bytes, dict, int, list, object, range, str, ascii, chr,
                       hex, input, next, oct, open, pow, round, super, filter,
                       map, zip)
 from math import (sqrt, acos, atan, degrees, hypot, pi)
-import gamingAI
-import imageCapture
+from imageCapture import captureFrame
+from gamingAI import (iswon, IA)
 import numpy as np
 import sys
 
@@ -187,18 +187,18 @@ if __name__ == '__main__':
             execute(ctx, 'pump_on')
             rospy.sleep(3.)
             # compare current board with last state
-            Gcur = imageCapture.captureFrame()
-            l, c = getDiff(Gcur, Gold)
+            G = captureFrame()
+            l, c = getDiff(G, Gold)
             print(l, c)
             # if the game is over, let's do a little jiggling before leaving
-            if gamingAI.iswon(Gcur, l, c):
+            if iswon(G, l, c):
                 execute(ctx, 'reset')
                 execute(ctx, 'upper_arm 90')
                 rospy.sleep(5.)
                 sys.exit(0)
             # play the best move
-            putin(ctx, gamingAI.IA(Gcur, 1))
-            Gold = Gcur
+            putin(ctx, IA(G, 1))
+            Gold = G
             rospy.sleep(10.)
             # print(">>> ", end='')
             # stdin = raw_input()
