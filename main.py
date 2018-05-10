@@ -9,7 +9,6 @@ from builtins import (bytes, dict, int, list, object, range, str, ascii, chr,
                       hex, input, next, oct, open, pow, round, super, filter,
                       map, zip)
 from math import (sqrt, acos, atan, degrees, hypot, pi)
-import time
 import gamingAI
 import imageCapture
 import numpy as np
@@ -37,7 +36,7 @@ OPERAND = {
 
 # Hardcoded position of columns
 COLS = {
-    0: (0, -125, 200, 20),
+    0: (0, -125, 200, 20),  # far right for the arm
     1: (0,  -95, 230, 20),
     2: (0,  -60, 230, 20),
     3: (0,  -30, 220, 20),
@@ -122,22 +121,21 @@ def moveto(ctx, query):
     ctx['uarm'].publish(msg)
     msg = encode_command(OPERAND['upper_arm'], angle[2])
     ctx['uarm'].publish(msg)
-    time.sleep(1)
+    rospy.sleep(1.)  # sequential to avoid hitting the board
     msg = encode_command(OPERAND['lower_arm'], angle[1])
     ctx['uarm'].publish(msg)
 
 
 def putin(ctx, col):
+    """
+    Put the game piece currently hold by the suction pad in the select game
+    column. Then revert to the reset position.
+    """
     moveto(ctx, COLS[col])
-    time.sleep(1)
-    msg = encode_command(OPERAND['pump_off'], 0)
-    ctx['uarm'].publish(msg)
-    time.sleep(1)
-    msg = encode_command(OPERAND['lower_arm'], 45)
-    ctx['uarm'].publish(msg)
-    time.sleep(1)
-    msg = encode_command(OPERAND['reset'], 0)
-    ctx['uarm'].publish(msg)
+    rospy.sleep(1.)
+    execute(ctx, 'pump_off')
+    rospy.sleep(1.)
+    execute(ctx, 'reset')
 
 
 def execute(ctx, msg):
@@ -152,20 +150,21 @@ def execute(ctx, msg):
         print("{} is not an valid command.".format(query[0]))
         return
     rospy.loginfo(msg)
-    if OPERAND[query[0]] == 6:
-        # RESET, because I'm lazy
-        msg = encode_command(OPERAND['lower_arm'], 45)
-        ctx['uarm'].publish(msg)
-        time.sleep(1)
-
-    if OPERAND[query[0]] == 9:
+    if len(query) < 2:
+        # append dumb argument for padding
+        query = query + [0]
+    if query[0] == 'reset':
+        # move the arm upward prior to reset to avoid hitting the game
+        execute(ctx, 'lower_arm 45')
+        rospy.sleep(1)
+    if query[0] == 'mv':
         # special case for moveto which is not implemented on the arm
         moveto(ctx, query)
     elif 10 <= OPERAND[query[0]] <= 12:
         # special case for elevator commands
         msg = encode_command(OPERAND[query[0]]-9, int(query[1]))
         ctx['elev'].publish(msg)
-    elif OPERAND[query[0]] == 13:
+    elif query[0] == 'putin':
         putin(ctx, int(query[1]))
     else:
         # every others operations are directly implemented on the arm
@@ -176,25 +175,25 @@ def execute(ctx, msg):
 
 if __name__ == '__main__':
     try:
-        Gold = np.arange(42).reshape(6, 7)*0
+        Gold = np.zeros(6, 7)
         ctx = uarm_init()
-        time.sleep(10)
+        rospy.sleep(10.)
         while True and not rospy.is_shutdown():
             msg = encode_command(OPERAND['pump_on'], 1)
             ctx['uarm'].publish(msg)
-            time.sleep(3)
-            G = imageCapture.captureFrame()
-            l, c = getDiff(G, Gold)
+            rospy.sleep(3.)
+            Gcur = imageCapture.captureFrame()
+            l, c = getDiff(Gcur, Gold)
             print(l, c)
-            if gamingAI.iswon(G, l, c):
+            if gamingAI.iswon(Gcur, l, c):
                 msg = encode_command(OPERAND['reset'], 0)
                 ctx['uarm'].publish(msg)
                 msg = encode_command(OPERAND['upper_arm'], 90)
                 ctx['uarm'].publish(msg)
                 break
-            putin(ctx, gamingAI.IA(G, 1))
-            Gold = G
-            time.sleep(15)
+            putin(ctx, gamingAI.IA(Gcur, 1))
+            Gold = Gcur
+            rospy.sleep(15.)
             # print(">>> ", end='')
             # stdin = raw_input()
             # execute(ctx, stdin)
