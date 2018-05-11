@@ -20,19 +20,19 @@ import rospy
 
 # List of available uArm operations
 OPERAND = {
-    'lower_arm': 1,
-    'upper_arm': 2,
-    'base_rot':  3,
-    'pump_on':   4,
-    'pump_off':  5,
-    'reset':     6,
-    'get_value': 7,  # not implemented
-    'head_rot':  8,
-    'mv':        9,
-    'elev1':	10,
-    'elev2':	11,
-    'elev3':    12,
-    'putin':    13
+    'lower_arm':  1,
+    'upper_arm':  2,
+    'base_rot':   3,
+    'pump_on':    4,
+    'pump_off':   5,
+    'reset':      6,
+    'get_value':  7,  # not implemented
+    'head_rot':   8,
+    'mv':         9,
+    'getdown':	 10,
+    'getup':	 11,
+    'getdownof': 12,
+    'putin':     13
 }
 
 # Hardcoded position of columns
@@ -43,7 +43,7 @@ COLS = {
     3: (0,  -30, 220, 20),
     4: (0,    0, 220, 20),
     5: (0,   30, 230, 20),
-    6: (0,   60, 240, 20)
+    6: (0,   60, 230, 20)
 }
 
 
@@ -176,33 +176,48 @@ def getDiff(g, gold):
     except:
         return 0, 0
 
+def happyending(ctx):
+    execute(ctx, 'reset')
+    execute(ctx, 'upper_arm 100')
+    rospy.sleep(1.)
+    execute(ctx, 'getdown')
+    rospy.sleep(25.)
+    sys.exit(0)
+
 
 if __name__ == '__main__':
+    automate = True;
+    if len(sys.argv) > 1:
+        automate = False
     try:
-        Gold = np.zeros(6, 7)
+        Gold = np.zeros((6, 7))
         ctx = uarm_init()
-        rospy.sleep(10.)
+        rospy.sleep(1.)
         while not rospy.is_shutdown():
-            # init game sequence by activating the pump
-            execute(ctx, 'pump_on')
-            rospy.sleep(3.)
-            # compare current board with last state
-            G = captureFrame()
-            l, c = getDiff(G, Gold)
-            print(l, c)
-            # if the game is over, let's do a little jiggling before leaving
-            if iswon(G, l, c):
-                execute(ctx, 'reset')
-                execute(ctx, 'upper_arm 90')
-                rospy.sleep(5.)
-                sys.exit(0)
-            # play the best move
-            putin(ctx, IA(G, 1))
-            Gold = G
-            rospy.sleep(10.)
-            # print(">>> ", end='')
-            # stdin = raw_input()
-            # execute(ctx, stdin)
+            if automate:
+                # init game sequence by activating the pump
+                execute(ctx, 'pump_on')
+                rospy.sleep(3.)
+                # compare current board with last state
+                G = captureFrame()
+                l, c = getDiff(G, Gold)
+                print(G, l, c)
+                # if the game is over, let's do a little jiggling before leaving
+                if iswon(G, l, c):
+                    happyending(ctx)
+                # play the best move
+                putin(ctx, IA(G, 1))
+                Gold = G
+                G = captureFrame()
+                l, c = getDiff(G, Gold)
+                print(G, l, c)
+                if iswon(G, l, c):
+                    happyending(ctx)
+                rospy.sleep(15.)
+            else:
+                print(">>> ", end='')
+                stdin = raw_input()
+                execute(ctx, stdin)
     except rospy.ROSInterruptException:
         print("Shutdown signal received.")
     except (KeyboardInterrupt, EOFError) as err:

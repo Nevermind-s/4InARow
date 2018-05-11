@@ -81,6 +81,8 @@ def IA(G, p):
             a = list(set(l).intersection(l2))
             if len(a) != 0:
                 L = min(a, key=lambda x: abs(x-3))
+                print(a)
+                print(L)
                 return L
             else:
                 return min(l, key=lambda x: abs(x-3))
